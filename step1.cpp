@@ -1,17 +1,17 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <iomanip>
-#include <fstream> 
-
+#include <fstream>
+#include <locale>
+#include <codecvt>
 
 class Event {
 public:
-    std::string date;  // Дата события
-    std::string description;  // Описание события
+    std::string title;       // Название события
+    std::string description; // Описание события
 
-    Event(const std::string& date, const std::string& description)
-        : date(date), description(description) {}
+    Event(const std::string& title, const std::string& description)
+        : title(title), description(description) {}
 };
 
 class EventCalendar {
@@ -24,49 +24,44 @@ public:
         loadFromFile(); // Загружаем события из файла при создании объекта
     }
 
-    void addEvent(const std::string& date, const std::string& description) {
-        events.push_back(Event(date, description));
+    void addEvent(const std::string& title, const std::string& description) {
+        events.push_back(Event(title, description));
         saveToFile(); // Сохраняем события в файл после добавления
     }
 
-    void viewEvents(const std::string& date) const {
-         std::setlocale(LC_ALL, "ru_RU.UTF-8");
-        std::cout << "События на " << date << ":\n";
+    void viewEvents(const std::string& title) const {
+        std::cout << "События с названием \"" << title << "\":\n";
         for (size_t i = 0; i < events.size(); ++i) {
-            if (events[i].date == date) {
+            if (events[i].title == title) {
                 std::cout << i + 1 << ". " << events[i].description << "\n";
             }
         }
     }
-  void deleteEvent(size_t index) {
+
+    void deleteEvent(size_t index) {
         if (index < 1 || index > events.size()) {
-             std::setlocale(LC_ALL, "ru_RU.UTF-8");
             std::cout << "Неверный индекс!\n";
             return;
         }
         events.erase(events.begin() + index - 1);
-         std::setlocale(LC_ALL, "ru_RU.UTF-8");
         std::cout << "Событие удалено.\n";
         saveToFile(); // Сохраняем события в файл после удаления
     }
 
     void saveToFile() const {
-        std::ofstream outFile(filename);
+        std::ofstream outFile(filename, std::ios::out | std::ios::binary);
         if (!outFile) {
-             std::setlocale(LC_ALL, "ru_RU.UTF-8");
             std::cerr << "Ошибка открытия файла для записи.\n";
             return;
         }
         for (const auto& event : events) {
-            outFile << event.date << ";" << event.description << "\n";
+            outFile << event.title << ";" << event.description << "\n";
         }
-        outFile.close();
     }
 
     void loadFromFile() {
-        std::ifstream inFile(filename);
+        std::ifstream inFile(filename, std::ios::in | std::ios::binary);
         if (!inFile) {
-             std::setlocale(LC_ALL, "ru_RU.UTF-8");
             std::cerr << "Файл не найден, создается новый.\n";
             return; // Если файл не найден, просто продолжаем
         }
@@ -74,22 +69,20 @@ public:
         while (std::getline(inFile, line)) {
             size_t delimiterPos = line.find(';');
             if (delimiterPos != std::string::npos) {
-                std::string date = line.substr(0, delimiterPos);
+                std::string title = line.substr(0, delimiterPos);
                 std::string description = line.substr(delimiterPos + 1);
-                events.push_back(Event(date, description));
+                events.push_back(Event(title, description));
             }
         }
-        inFile.close();
     }
 };
 
 int main() {
-
-   
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
 
     EventCalendar calendar;
     int choice;
- std::setlocale(LC_ALL, "ru_RU.UTF-8");
+
     do {
         std::cout << "1. Добавить событие\n"
                   << "2. Посмотреть события\n"
@@ -101,40 +94,36 @@ int main() {
 
         switch (choice) {
             case 1: {
-                 std::setlocale(LC_ALL, "ru_RU.UTF-8");
-                std::string date, description;
-                std::cout << "Введите дату (в формате ГГГГ-ММ-ДД): ";
-                std::getline(std::cin, date);
+                std::string title, description;
+                std::cout << "Введите название события: ";
+                std::getline(std::cin, title);
                 std::cout << "Введите описание события: ";
                 std::getline(std::cin, description);
-                calendar.addEvent(date, description);
+                calendar.addEvent(title, description);
                 break;
             }
             case 2: {
-                std::string date;
-                 std::setlocale(LC_ALL, "ru_RU.UTF-8");
-                std::cout << "Введите дату для просмотра событий: ";
-                std::getline(std::cin, date);
-                calendar.viewEvents(date);
+                std::string title;
+                std::cout << "Введите название для просмотра событий: ";
+                std::getline(std::cin, title);
+                calendar.viewEvents(title);
                 break;
             }
             case 3: {
                 size_t index;
-                 std::setlocale(LC_ALL, "ru_RU.UTF-8");
                 std::cout << "Введите индекс события для удаления: ";
                 std::cin >> index;
                 calendar.deleteEvent(index);
                 break;
             }
             case 0:
-             std::setlocale(LC_ALL, "ru_RU.UTF-8");
                 std::cout << "Выход из программы.\n";
                 break;
             default:
-             std::setlocale(LC_ALL, "ru_RU.UTF-8");
                 std::cout << "Неверный выбор, попробуйте снова.\n";
         }
     } while (choice != 0);
 
     return 0;
+    
 }
